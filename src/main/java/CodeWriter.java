@@ -206,6 +206,23 @@ public class CodeWriter {
 			
 			
 		}
+
+	}
+
+	public void writeLabel(String label) throws IOException {
+		writeLine(String.format("(%s)", label));
+	}
+	public void writeGoto(String label,boolean jump) throws IOException {
+		writeLine(String.format("@%s", label));
+		if(jump){
+			writeLine("0;JMP");
+		}
+		
+	}
+	public void writeIf(String label) throws IOException {
+		fetchPop();
+		writeGoto(label,false);
+		writeLine("D;JNE");
 	}
 	
 	public void close() throws IOException {

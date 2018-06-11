@@ -76,7 +76,16 @@ public class Parser {
 		case "pop":
 			result = commandType.C_POP;
 			break;
-			
+		case "label":
+			result = commandType.C_LABEL;
+			break;
+		case "goto":
+			result = commandType.C_GOTO;
+			break;
+		case "if-goto":
+			result = commandType.C_IF;
+			break;
+
 		
 		}
 		return result;
