@@ -209,9 +209,76 @@ public class CodeWriter {
 
 	}
 
+	public void writeInit() throws IOException {
+			
+	}
+
+	public void writeFunction(String functionName, int argn) throws IOException{
+		writeLabel(functionName,false);
+		for(int i=0;i < argn;i++){
+			writePushPop(Parser.commandType.C_PUSH, "local", 0);
+		}
+	}
+
+	public void writeCall(String functionName, int argn) throws IOException {
+		String returnAddress = String.format("return-%s",functionName);
+		pushAddress(returnAddress);
+		pushAddress("LCL");
+		pushAddress("ARG");
+		pushAddress("THIS");
+		pushAddress("THAT");
+
+		//reposition arg
+		writeLine("@"+argn);
+		writeLine("D=A");
+		writeLine("@SP");
+		writeLine("AM=M-D");
+		writeLine("@5");
+		writeLine("D=A");
+		writeLine("@SP");
+		writeLine("AM=M-D");
+
+		//set lcl to sp
+		writeLine("@SP");
+		writeLine("D=A");
+		writeLine("@LCL");
+		writeLine("AM=D");
+
+		writeGoto(functionName,true);
+		writeLabel(returnAddress);
+
+
+
+	}
+	public void writeReturn() throws IOException {
+		//frame = lcl
+		writeLine("@LCL");
+		writeLine("D=A");
+		writePushPop(Parser.commandType.C_PUSH, "temp", 1);
+			
+		
+	
+	}
+
+	public void pushAddress(String label) throws IOException {
+		
+		writeLine(String.format("@%s",label));
+		writeLine("D=A");
+		writeSinglePush();
+	}
+
+	public void writeSinglePush() throws IOException {
+		writeLine("@SP");
+		writeLine("A=M");
+		writeLine("M=D");
+		writeLine("@SP");
+		writeLine("AM=M+1");
+
+	}
 	public void writeLabel(String label) throws IOException {
 		writeLine(String.format("(%s)", label));
 	}
+	
 	public void writeGoto(String label,boolean jump) throws IOException {
 		writeLine(String.format("@%s", label));
 		if(jump){
