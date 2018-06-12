@@ -38,6 +38,9 @@ public class Parser {
 		currentCommand = tempCommand.split(" ");
 		return true;
 	}
+	public String getCurrentCommand() {
+		return String.join(" ", currentCommand);
+	}
 	
 	public commandType commandType() {
 		
@@ -84,6 +87,15 @@ public class Parser {
 			break;
 		case "if-goto":
 			result = commandType.C_IF;
+			break;
+		case "function":
+			result = commandType.C_FUNCTION;
+			break;
+		case "call":
+			result = commandType.C_CALL;
+			break;
+		case "return":
+			result = commandType.C_RETURN;
 			break;
 
 		

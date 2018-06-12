@@ -122,9 +122,8 @@ public class CodeWriter {
 			writeLine("@SP");
 			writeLine("AM=M+1");
 	}
-	public void writePushPop(Parser.commandType command, String segment, int index) throws IOException {
+	public void writePushPop(Parser.commandType command, String segment, int index, boolean isDirect) throws IOException {
 		String segmentLabel = null;
-		boolean isDirect = false;
 		switch(segment) {
 		case "constant":
 			segmentLabel = "@SP";
@@ -174,7 +173,7 @@ public class CodeWriter {
 				writeLine("A=M");
 				writeLine("M=D");
 				writeLine("@SP");
-				writeLine("AM=M+1");
+				writeLine("M=M+1");
 				
 			}else {
 				writeLine(segmentLabel);
@@ -210,39 +209,73 @@ public class CodeWriter {
 	}
 
 	public void writeInit() throws IOException {
-			
+		writeLine("@256");
+		writeLine("D=A");
+		writeLine("@SP");
+		writeLine("AM=D");
+		
+		writeCall("Sys.init",0);
 	}
 
 	public void writeFunction(String functionName, int argn) throws IOException{
-		writeLabel(functionName,false);
+		writeLabel(functionName);
 		for(int i=0;i < argn;i++){
-			writePushPop(Parser.commandType.C_PUSH, "local", 0);
+			writePushPop(Parser.commandType.C_PUSH, "constant", 0,false);
 		}
 	}
 
 	public void writeCall(String functionName, int argn) throws IOException {
 		String returnAddress = String.format("return-%s",functionName);
 		pushAddress(returnAddress);
-		pushAddress("LCL");
-		pushAddress("ARG");
-		pushAddress("THIS");
-		pushAddress("THAT");
+		writeLine("@LCL");
+		writeLine("D=M");
+		writeLine("@SP");
+		writeLine("A=M");
+		writeLine("M=D");
+		writeLine("@SP");
+		writeLine("M=M+1");
+		
+		
+		writeLine("@ARG");
+		writeLine("D=M");
+		writeLine("@SP");
+		writeLine("A=M");
+		writeLine("M=D");
+		writeLine("@SP");
+		writeLine("M=M+1");
+		
+		
+		writeLine("@THIS");
+		writeLine("D=M");
+		writeLine("@SP");
+		writeLine("A=M");
+		writeLine("M=D");
+		writeLine("@SP");
+		writeLine("M=M+1");
+		
+		writeLine("@THAT");
+		writeLine("D=M");
+		writeLine("@SP");
+		writeLine("A=M");
+		writeLine("M=D");
+		writeLine("@SP");
+		writeLine("M=M+1");
 
 		//reposition arg
-		writeLine("@"+argn);
-		writeLine("D=A");
 		writeLine("@SP");
-		writeLine("AM=M-D");
+		writeLine("D=M");
 		writeLine("@5");
-		writeLine("D=A");
-		writeLine("@SP");
-		writeLine("AM=M-D");
+		writeLine("D=D-A");
+		writeLine("@"+argn);
+		writeLine("D=D-A");
+		writeLine("@ARG");
+		writeLine("M=D");
 
 		//set lcl to sp
 		writeLine("@SP");
-		writeLine("D=A");
+		writeLine("D=M");
 		writeLine("@LCL");
-		writeLine("AM=D");
+		writeLine("M=D");
 
 		writeGoto(functionName,true);
 		writeLabel(returnAddress);
@@ -253,13 +286,69 @@ public class CodeWriter {
 	public void writeReturn() throws IOException {
 		//frame = lcl
 		writeLine("@LCL");
-		writeLine("D=A");
-		writePushPop(Parser.commandType.C_PUSH, "temp", 1);
+		writeLine("D=M");
+		writeLine("@R11");
+		writeLine("M=D");
+		
+		
+		//ret = FRAME - 5 and pop to arg
+		writeLine("@5");
+		writeLine("A=D-A");
+		writeLine("D=M");
+		writeLine("@R12");
+		writeLine("M=D");
+	
+		writePushPop(Parser.commandType.C_POP, "argument",0, false);
+		//sp =arg +1;
+		writeLine("@ARG");
+		writeLine("D=M");
+		writeLine("@SP");
+		writeLine("M=D+1");
+		
+		//that =frame -1
+		writeLine("@R11");
+		writeLine("D=M-1");
+		writeLine("AM=D");
+		writeLine("D=M");
+		writeLine("@THAT");
+		writeLine("M=D");
+		
+		//this = frame -2
+		writeLine("@R11");
+		writeLine("D=M-1");
+		writeLine("AM=D");
+		writeLine("D=M");
+		writeLine("@THIS");
+		writeLine("M=D");
+		
+		//arg = frame -3
+		writeLine("@R11");
+		writeLine("D=M-1");
+		writeLine("AM=D");
+		writeLine("D=M");
+		writeLine("@ARG");
+		writeLine("M=D");
+		
+		//lcl= frame-4
+		writeLine("@R11");
+		writeLine("D=M-1");
+		writeLine("AM=D");
+		writeLine("D=M");
+		writeLine("@LCL");
+		writeLine("M=D");
+		
+		//goto ret
+		writeLine("@R12");
+		writeLine("A=M");
+		writeLine("0;JMP");
+		
+		
+		
+		
 			
 		
 	
 	}
-
 	public void pushAddress(String label) throws IOException {
 		
 		writeLine(String.format("@%s",label));
@@ -272,7 +361,7 @@ public class CodeWriter {
 		writeLine("A=M");
 		writeLine("M=D");
 		writeLine("@SP");
-		writeLine("AM=M+1");
+		writeLine("M=M+1");
 
 	}
 	public void writeLabel(String label) throws IOException {
