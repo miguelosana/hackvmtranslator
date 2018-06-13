@@ -8,12 +8,12 @@ public class CodeWriter {
 
 	private BufferedWriter bw = null;
 	private int jumpCount =0;
+	private int returnCount=0;
 	private String name;
 	
 	public void setFileName(String fileName) {
 		try {
 			File outputFile = new  File(fileName);
-			name = outputFile.getName().replace(".asm", "");
 			FileOutputStream fos = new FileOutputStream(outputFile);
 			this.bw = new BufferedWriter(new OutputStreamWriter(fos));
 			
@@ -21,6 +21,11 @@ public class CodeWriter {
 			ex.printStackTrace();
 		}
 
+	}
+	
+	public void setName(String name) {
+		
+		this.name = name;
 	}
 	
 	public void writeArithmetic(String command) throws IOException{
@@ -225,7 +230,8 @@ public class CodeWriter {
 	}
 
 	public void writeCall(String functionName, int argn) throws IOException {
-		String returnAddress = String.format("return-%s",functionName);
+		String returnAddress = String.format("return-%s-%s",functionName,Integer.toString(returnCount));
+		
 		pushAddress(returnAddress);
 		writeLine("@LCL");
 		writeLine("D=M");
@@ -279,7 +285,7 @@ public class CodeWriter {
 
 		writeGoto(functionName,true);
 		writeLabel(returnAddress);
-
+		returnCount++;
 
 
 	}

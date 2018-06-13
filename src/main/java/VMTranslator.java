@@ -16,10 +16,13 @@ public class VMTranslator {
 				outputFileName = file.getAbsolutePath().replace(".vm", ".asm");
 			}
 			codeWriter.setFileName(outputFileName);
-						codeWriter.writeInit();
 			if(!file.isDirectory()) {
 				parseFile(file, codeWriter);
 			}else {
+				File sysInit = new File(file.getAbsolutePath()+"/Sys.vm");
+				if(sysInit.exists()) {
+						codeWriter.writeInit();
+				}
 				for(final File fileEntry: file.listFiles()) {
 					if(!fileEntry.isDirectory() && fileEntry.getName().endsWith(".vm")) {
 						parseFile(fileEntry, codeWriter);
@@ -36,6 +39,7 @@ public class VMTranslator {
 	public static void parseFile(File file,CodeWriter codeWriter) throws IOException {
 		
 			Parser parser = new Parser(file);
+			codeWriter.setName(file.getName().replace(".vm", ""));
 			while(parser.hasMoreCommands()) {
 				while(parser.advance() ==false) {}
 				Parser.commandType commandType = parser.commandType();
